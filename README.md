@@ -1,26 +1,27 @@
 # C# & .NET Basics: Concepts, Types, Memory, and More
 
 ## Table of Contents
+## Table of Contents
 1. [What is .NET?](#1-what-is-net)
 2. [Common Language Runtime (CLR)](#2-can-you-explain-the-common-language-runtime-clr)
 3. [Managed vs Unmanaged Code](#3-what-is-the-difference-between-managed-and-unmanaged-code)
-4. [Value Types and Reference Types in C#](#5-what-are-value-types-and-reference-types-in-c)
+4. [Value Types and Reference Types in C#](#4-what-are-value-types-and-reference-types-in-c)
     - [Value Types](#value-types)
     - [Reference Types](#reference-types)
-5. [Garbage Collection in .NET](#6-what-is-garbage-collection-in-net)
-6. [Exception Handling](#7-explain-the-concept-of-exception-handling-in-c)
-7. [Types of Classes in C#](#8-what-are-the-different-types-of-classes-in-c)
-8. [Namespace in C#](#9-can-you-describe-what-a-namespace-is-and-how-it-is-used-in-c)
-9. [Encapsulation](#10-what-is-encapsulation)
-10. [Polymorphism in C#](#11-explain-polymorphism-and-its-types-in-c)
-11. [Delegates in C#](#12-what-are-delegates-and-how-are-they-used-in-c)
-12. [LINQ in C#](#13-describe-what-linq-is-and-give-an-example-of-where-it-might-be-used)
-13. [Abstract Class vs Interface](#14-what-is-the-difference-between-an-abstract-class-and-an-interface)
-14. [Memory Management in .NET](#15-how-do-you-manage-memory-in-net-applications)
-15. [Threading in .NET](#16-explain-the-concept-of-threading-in-net)
-16. [Async/Await in C#](#17-what-is-asyncawait-and-how-does-it-work)
-17. [Entity Framework](#18-describe-the-entity-framework-and-its-advantages)
-18. [Extension Methods in C#](#19-what-are-extension-methods-and-where-would-you-use-them)
+5. [Garbage Collection in .NET](#5-what-is-garbage-collection-in-net)
+6. [Exception Handling in C#](#6-explain-the-concept-of-exception-handling-in-c)
+7. [Types of Classes in C#](#7-what-are-the-different-types-of-classes-in-c)
+8. [Namespace in C#](#8-can-you-describe-what-a-namespace-is-and-how-it-is-used-in-c)
+9. [Encapsulation](#9-what-is-encapsulation)
+10. [Polymorphism and Its Types in C#](#10-explain-polymorphism-and-its-types-in-c)
+11. [Delegates and Their Usage](#11-what-are-delegates-and-how-are-they-used-in-c)
+12. [LINQ and Its Usage](#12-describe-what-linq-is-and-give-an-example-of-where-it-might-be-used)
+13. [Abstract Class vs Interface](#13-what-is-the-difference-between-an-abstract-class-and-an-interface)
+14. [Memory Management in .NET](#14-how-do-you-manage-memory-in-net-applications)
+15. [Threading in .NET](#15-explain-the-concept-of-threading-in-net)
+16. [Async/Await in C#](#16-what-is-asyncawait-and-how-does-it-work)
+17. [Entity Framework](#17-describe-the-entity-framework-and-its-advantages)
+18. [Extension Methods in C#](#18-what-are-extension-methods-and-where-would-you-use-them)
 
 ---
 
