@@ -35,7 +35,10 @@
 29. [Can you explain the difference between Razor Pages and MVC in ASP.NET Core?](#29-can-you-explain-the-difference-between-razor-pages-and-mvc-in-aspnet-core)
 30. [How do you perform validations in ASP.NET Core?](#30-how-do-you-perform-validations-in-aspnet-core)
 31. [Describe SignalR and its use cases.](#31-describe-signalr-and-its-use-cases)
-32. ---
+32. [What is Routing in ASP.NET Core?](#32-what-is-routing-in-aspnet-core)
+33. [What is Minimal API in ASP.NET Core?](#33-what-is-minimal-api-in-aspnet-core)
+34. [What is async/await?](#34-what-is-asyncawait)
+35. [Why API Versioning? Strategies and Implementation](#35-why-api-versioning-strategies-and-implementation)
 
 ## 1. What is .NET?
 **Answer:**  
@@ -1207,3 +1210,253 @@ public class ChatHub : Hub
 - Live notifications
 - Collaborative editing
 - Real-time dashboards
+
+## 32. What is Routing in ASP.NET Core?
+
+**Routing** is the process of matching incoming HTTP requests (URL and method) to specific controllers, actions, or endpoints in your ASP.NET Core application.
+
+### How Routing Works
+1. Request arrives at the server.
+2. Routing middleware checks route patterns.
+3. Matches request to defined route.
+4. Executes the corresponding controller/action/endpoint.
+5. Returns the response.
+
+### Types of Routing
+
+#### A. Convention-based Routing (Traditional)
+- Defined in Program.cs / Startup.cs.
+- Uses patterns to match URLs to controllers/actions.
+
+**Example:**
+```csharp
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Home}/{action=Index}/{id?}");
+});
+// /Products/Details/5 → ProductsController.Details(5)
+// / → HomeController.Index()
+```
+**Pros:** Centralized, easy for simple apps  
+**Cons:** Less control for complex routes.
+
+#### B. Attribute Routing
+- Routes defined on controllers/actions using attributes.
+
+**Example:**
+```csharp
+[Route("products")]
+public class ProductsController : Controller
+{
+    [Route("details/{id}")]
+    public IActionResult Details(int id) => Ok($"Product ID: {id}");
+
+    [Route("all")]
+    public IActionResult List() => Ok("All products");
+}
+```
+**Pros:** Flexible and readable, custom routes per action  
+**Cons:** Can be scattered in large apps.
+
+#### C. Endpoint Routing (ASP.NET Core 3.0+)
+- Modern system, unifies convention and attribute routing.
+- Allows route-based middleware.
+
+**Example:**
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapControllers(); // Enables endpoint routing
+
+app.Run();
+```
+
+### Routing Summary Table
+
+| Routing Type         | Where Defined              | Flexibility | Example URL           |
+|----------------------|---------------------------|-------------|-----------------------|
+| Convention-based     | Program.cs or Startup.cs  | Medium      | /Products/Details/5   |
+| Attribute routing    | [Route()] on controllers  | High        | /products/details/5   |
+| Endpoint routing     | Unified, modern system    | Very High   | /products/details/5   |
+
+**Key Points:**
+- Routing matches requests to endpoints using patterns.
+- Convention-based: centralized and pattern-based.
+- Attribute routing: flexible, fine-grained.
+- Endpoint routing: modern, combines both, supports middleware.
+
+---
+
+## 33. What is Minimal API in ASP.NET Core?
+
+Minimal API is a lightweight way to build HTTP APIs in ASP.NET Core (introduced in .NET 6), without controllers.
+
+- Ideal for small services, microservices, quick prototyping.
+- Everything can be in one file (Program.cs), fast and simple.
+
+**Example:**
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapGet("/hello", () => "Hello World!");
+app.MapGet("/products/{id}", (int id) => $"Product ID: {id}");
+
+app.MapPost("/orders", (Order order) =>
+{
+    // Save order logic
+    return Results.Created($"/orders/{order.Id}", order);
+});
+
+app.Run();
+```
+
+### Comparison: Minimal API vs Controllers
+
+| Feature           | Minimal API           | Controllers                        |
+|-------------------|----------------------|-------------------------------------|
+| File structure    | Program.cs           | Controllers, Models, etc.           |
+| Boilerplate       | Minimal              | More (attributes, classes)          |
+| Features          | Routing, DI, MW      | Full MVC: filters, binding, attrs   |
+| Best use case     | Small/micro APIs     | Large, complex APIs                 |
+| Endpoint grouping | Limited              | [Route], [ApiController], areas     |
+| DI, middleware    | Supported            | Supported                           |
+
+- Use Minimal API for small, focused API services.
+- Use Controllers for large/more complex APIs with MVC features.
+
+**Key Takeaways:**  
+Minimal API = simple, lightweight, ideal for small services  
+Controllers = structured, feature-rich, ideal for larger applications  
+Both support DI, middleware, and endpoint routing.
+
+---
+
+## 34. What is async/await?
+
+**async/await** is C# syntax for writing asynchronous code that looks synchronous.
+
+- `async` makes a method asynchronous.
+- `await` pauses method execution until the awaited task completes, without blocking the thread.
+
+**Example:**
+```csharp
+public async Task<string> GetDataAsync()
+{
+    await Task.Delay(1000); // Simulate delay
+    return "Data fetched!";
+}
+```
+
+- The thread can do other work while waiting.
+- Improves scalability for web apps (especially on I/O: DB calls, HTTP, file).
+
+**Why use async/await?**
+- Scalability: more concurrent operations, no thread blocking.
+- Readability: code looks linear, avoids callbacks and .ContinueWith.
+
+---
+
+## 35. Why API Versioning? Strategies and Implementation
+
+**Why version APIs?**  
+APIs evolve; clients may break if APIs change. Versioning allows multiple versions to coexist, with clients choosing what to use.
+
+### Common API Versioning Strategies
+
+#### A. URL Path
+Version part of URL:
+- **Example:** `GET /api/v1/products`, `GET /api/v2/products`
+
+**Implementation:**
+```csharp
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+public class ProductsController : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetV1() => Ok("V1 Products");
+}
+
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("2.0")]
+public class ProductsV2Controller : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetV2() => Ok("V2 Products");
+}
+```
+
+#### B. Query String
+Pass version as query parameter.
+- **Example:** `GET /api/products?api-version=1.0`
+
+**Implementation:**
+```csharp
+services.AddApiVersioning(options =>
+{
+    options.ApiVersionReader = new QueryStringApiVersionReader("api-version");
+});
+```
+
+#### C. Header Versioning
+Version passed in HTTP header.
+- **Example:**  
+  Header: x-api-version: 1.0
+
+**Implementation:**
+```csharp
+services.AddApiVersioning(options =>
+{
+    options.ApiVersionReader = new HeaderApiVersionReader("x-api-version");
+});
+```
+
+#### D. Media Type (Content Negotiation)
+Version in Accept Header.
+- **Example:**  
+  `Accept: application/json;v=1.0`
+
+**Implementation:**
+```csharp
+services.AddApiVersioning(options =>
+{
+    options.ApiVersionReader = new MediaTypeApiVersionReader("v");
+});
+```
+
+### Default Configuration
+
+```csharp
+services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+});
+```
+- `AssumeDefaultVersionWhenUnspecified`: Backward compatibility.
+- `ReportApiVersions`: Adds available versions to response headers.
+
+### Strategy Comparison
+
+| Strategy         | Pros               | Cons                | Best Use                    |
+|------------------|--------------------|---------------------|-----------------------------|
+| URL Path         | Clear, explicit    | URL structure change| Public APIs                 |
+| Query String     | Clean URLs         | Less visible        | Internal APIs               |
+| Header           | Hidden version     | Harder to test      | SDK/Enterprise clients      |
+| Media Type       | Negotiation focus  | More complex        | Multiple formats (JSON/XML) |
+
+### Tips
+- Keep old versions active during migration.
+- Use ReportApiVersions = true for client info.
+- Document using Swagger/OpenAPI with versioning.
+
+---
