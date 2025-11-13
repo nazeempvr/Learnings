@@ -26,7 +26,16 @@
 20. [What is reflection in .NET and how would you use it?](#20-what-is-reflection-in-net-and-how-would-you-use-it)
 21. [Can you explain the concept of middleware in ASP.NET Core?](#21-can-you-explain-the-concept-of-middleware-in-aspnet-core)
 22. [Describe the Dependency Injection (DI) pattern and how it's implemented in .NET Core.](#22-describe-the-dependency-injection-di-pattern-and-how-its-implemented-in-net-core)
----
+23. [What are Service Lifetimes in .NET Core?](#23-what-are-service-lifetimes-in-net-core)
+24. [How does garbage collection work in .NET and how can you optimize it?](#24-how-does-garbage-collection-work-in-net-and-how-can-you-optimize-it)
+25. [Can you describe the process of code compilation in .NET?](#25-can-you-describe-the-process-of-code-compilation-in-net)
+26. [What is the Global Assembly Cache (GAC) and when should it be used?](#26-what-is-the-global-assembly-cache-gac-and-when-should-it-be-used)
+27. [How would you secure a web application in ASP.NET Core?](#27-how-would-you-secure-a-web-application-in-aspnet-core)
+28. [What is MVC (Model-View-Controller)?](#28-what-is-mvc-model-view-controller)
+29. [Can you explain the difference between Razor Pages and MVC in ASP.NET Core?](#29-can-you-explain-the-difference-between-razor-pages-and-mvc-in-aspnet-core)
+30. [How do you perform validations in ASP.NET Core?](#30-how-do-you-perform-validations-in-aspnet-core)
+31. [Describe SignalR and its use cases.](#31-describe-signalr-and-its-use-cases)
+32. ---
 
 ## 1. What is .NET?
 **Answer:**  
@@ -895,3 +904,306 @@ public class Startup
 ```
 
 DI in .NET Core supports the development of decoupled and easily testable applications.
+## 23. What are Service Lifetimes in .NET Core?
+
+In ASP.NET Core, Dependency Injection (DI) controls how and when service instances are created. When you register a service in DI, you specify its *lifetime*—how long the object lives and who shares it.
+
+### The Three Service Lifetimes
+
+| Lifetime   | Created                      | Shared                | Example Use                              |
+|------------|-----------------------------|-----------------------|------------------------------------------|
+| Transient  | Every time it’s requested   | ❌ No                 | Stateless services (helper, formatter)   |
+| Scoped     | Once per HTTP Request        | ✅ Yes (per request)  | Per-request data (DbContext, business)   |
+| Singleton  | Once for the entire app      | ✅ Yes (global)       | Logging, configuration, caching          |
+
+#### 1. Transient
+- **Meaning:** New instance every time it’s requested (not shared).
+- **Registration:**  
+  ```csharp
+  services.AddTransient<IMyService, MyService>();
+  ```
+- **Uses:** Lightweight, stateless logic (helpers, converters, formatters).
+- **Caution:** For heavy or stateful services, avoid transient.
+
+#### 2. Scoped
+- **Meaning:** One instance per HTTP request; shared within that request.
+- **Registration:**  
+  ```csharp
+  services.AddScoped<IOrderService, OrderService>();
+  ```
+- **Uses:** Data consistency per request (DbContext, repositories).
+- **Caution:** Don’t inject a scoped service into a singleton.
+
+#### 3. Singleton
+- **Meaning:** Single instance for the whole app; shared across all requests.
+- **Registration:**  
+  ```csharp
+  services.AddSingleton<ILoggingService, LoggingService>();
+  ```
+- **Uses:** Shared, read-only, thread-safe services (logging, config, cache).
+- **Caution:** Must not hold per-user/per-request data.
+
+#### Service Lifetime Example
+```csharp
+public interface IGuidService { Guid Id { get; } }
+public class GuidService : IGuidService
+{
+    public Guid Id { get; } = Guid.NewGuid();
+}
+
+// Register in DI:
+builder.Services.AddTransient<IGuidService, GuidService>();
+builder.Services.AddScoped<IGuidService, GuidService>();
+builder.Services.AddSingleton<IGuidService, GuidService>();
+```
+Injected in controller:
+```csharp
+public class TestController : ControllerBase
+{
+    private readonly IGuidService _service1, _service2;
+    public TestController(IGuidService service1, IGuidService service2)
+    {
+        _service1 = service1;
+        _service2 = service2;
+    }
+
+    [HttpGet]
+    public string Get() => $"Service1: {_service1.Id}\nService2: {_service2.Id}";
+}
+```
+| Lifetime   | Output (same request)  | Output (next request)   |
+|------------|------------------------|------------------------|
+| Transient  | Different each time    | Different again        |
+| Scoped     | Same in request        | New in next request    |
+| Singleton  | Same always            | Same for all users     |
+
+---
+
+## 24. How does garbage collection work in .NET and how can you optimize it?
+
+Garbage Collection (GC) in .NET is an automatic process that reclaims memory used by objects no longer accessible, preventing memory leaks.
+
+### How GC Works
+
+- **Mark:** GC identifies all objects reachable from root references; these are marked as “live”.
+- **Compact:** Removes unreachable objects, compacts live objects to minimize heap fragmentation.
+- **Generations:** GC uses three generations for efficiency:
+  - Generation 0: Short-lived (collected most often).
+  - Generation 1: Medium-lived.
+  - Generation 2: Long-lived/large objects (collected least often).
+
+### Optimizing GC
+
+- **Minimize Allocations:** Avoid unnecessary allocations, especially in loops or performance-critical paths; reuse objects when possible.
+- **Understand Generations:** Minimize allocation of large objects (go directly to Gen 2).
+- **Use Structs Wisely:** Use small structs for quick stack allocation, but large structs can be inefficient.
+- **Implement IDisposable:** Free unmanaged resources with the `IDisposable` pattern.
+- **Monitor/Analyze:** Use profiling tools like Visual Studio Diag Tools, dotMemory, and System.GC APIs.
+
+#### Example: Implementing IDisposable
+```csharp
+public class ResourceWrapper : IDisposable
+{
+    private bool disposed = false;
+    private IntPtr _resource;
+
+    public ResourceWrapper()
+    {
+        _resource = /* Allocate resource */;
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposed)
+        {
+            if (disposing)
+            {
+                // Dispose managed resources.
+            }
+            if (_resource != IntPtr.Zero)
+            {
+                // Free the unmanaged resource.
+                _resource = IntPtr.Zero;
+            }
+            disposed = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    ~ResourceWrapper()
+    {
+        Dispose(false);
+    }
+}
+```
+
+---
+
+## 25. Can you describe the process of code compilation in .NET?
+
+Compilation in .NET converts source code (C#, VB, F#) into *Intermediate Language (IL)*, then into platform-specific machine code for execution.
+
+### Steps:
+
+1. **Source to IL:**
+   - The language compiler (e.g., csc.exe for C#) translates your code to IL.
+   - Metadata describing types, members, references is generated.
+2. **IL to Native Code:**
+   - The CLR uses the Just-In-Time (JIT) compiler to convert IL to native machine code *at runtime*, when a method is first called.
+   - Native code is cached; subsequent calls skip JIT.
+3. **Execution:**
+   - The native code runs directly on hardware.
+
+### Concepts
+
+- **Assemblies:** Compiled units (.dll/.exe) with IL and metadata; building blocks for deployment/versioning.
+- **Metadata:** Describes all types, methods, used for reflection and execution.
+- **Strong Naming & GAC:** Assemblies can be strong-named (unique, secure) for sharing in the Global Assembly Cache (GAC).
+- **Optimizations & NGEN:** JIT optimizations; the Native Image Generator (NGEN) can pre-compile assemblies to native code for faster starts.
+
+#### Example
+```csharp
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        Console.WriteLine("Hello, World!");
+    }
+}
+```
+This code is compiled to IL (.exe/.dll) and JIT-compiled to native code at runtime.
+
+---
+
+## 26. What is the Global Assembly Cache (GAC) and when should it be used?
+
+The **Global Assembly Cache (GAC)** is a machine-wide code cache for the .NET Framework (not .NET Core). It stores *strong-named* assemblies so they can be shared by multiple apps.
+
+### Key Points
+
+- **Sharing Assemblies:** Allows apps to use the same library (memory & consistency).
+- **Strong Naming:** Assemblies in GAC must have a strong name (identity, versioning, security).
+- **Versioning:** Supports side-by-side multiple versions.
+
+### When to Use
+
+- For libraries shared by many apps on a machine.
+- To manage complex versioning.
+- To secure common libraries at the admin/system level.
+
+#### Example: Add to GAC
+```sh
+gacutil -i MyAssembly.dll
+```
+
+**Note:** Modern .NET (Core, 5+) apps use NuGet and local dependencies, *not* the GAC.
+
+---
+
+## 27. How would you secure a web application in ASP.NET Core?
+
+Securing ASP.NET Core web apps involves **authentication, authorization, data protection, and enforcing HTTPS**.
+
+### Example: Enforcing HTTPS & Middleware
+
+```csharp
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+    app.UseHttpsRedirection();   // Redirect to HTTPS
+    app.UseAuthentication();     // Enable authentication middleware
+    app.UseAuthorization();      // Enable authorization middleware
+}
+```
+
+- **Authentication:** User identity (cookies, JWT, OAuth).
+- **Authorization:** Control what users can do.
+- **Data Protection:** Secure cookies, tokens, secrets.
+- **Enforce HTTPS:** Protect data in transit.
+
+---
+
+## 28. What is MVC (Model-View-Controller)?
+
+**MVC** is a pattern that splits apps into:
+- **Model:** Data & logic.
+- **View:** User interface.
+- **Controller:** Handles input, manages models/views.
+
+#### Example: MVC Controller
+```csharp
+public class HomeController : Controller
+{
+    public IActionResult Index()
+    {
+        return View();
+    }
+}
+```
+
+---
+
+## 29. Can you explain the difference between Razor Pages and MVC in ASP.NET Core?
+
+- **MVC** uses controllers and views; best for complex apps with reusable logic and views.
+- **Razor Pages** use page handlers (`OnGet`, `OnPost`...)—great for simple, page-focused apps.
+
+#### Example: Razor Page Handler
+```csharp
+public class IndexModel : PageModel
+{
+    public void OnGet()
+    {
+        // Handle GET request
+    }
+}
+```
+
+---
+
+## 30. How do you perform validations in ASP.NET Core?
+
+Validation uses **Data Annotations** or **Fluent Validation**.
+
+### Example: Data Annotations
+```csharp
+public class UserModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
+
+    [Required]
+    [MinLength(6)]
+    public string Password { get; set; }
+}
+```
+- `[Required]`, `[EmailAddress]`, etc. validate input.
+- Server- and client-side validation is supported.
+
+---
+
+## 31. Describe SignalR and its use cases.
+
+**SignalR** is a library for real-time web communication—push updates instantly to clients (chat, notifications, live dashboards).
+
+#### Example: SignalR Hub
+```csharp
+public class ChatHub : Hub
+{
+    public async Task SendMessage(string user, string message)
+    {
+        await Clients.All.SendAsync("ReceiveMessage", user, message);
+    }
+}
+```
+
+**Use Cases:**
+- Chat apps
+- Live notifications
+- Collaborative editing
+- Real-time dashboards
