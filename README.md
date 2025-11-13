@@ -22,7 +22,10 @@
 16. [Async/Await in C#](#16-what-is-asyncawait-and-how-does-it-work)
 17. [Entity Framework](#17-describe-the-entity-framework-and-its-advantages)
 18. [Extension Methods in C#](#18-what-are-extension-methods-and-where-would-you-use-them)
-
+19. [How do you handle exceptions in a method that returns a Task?](#19-how-do-you-handle-exceptions-in-a-method-that-returns-a-task)
+20. [What is reflection in .NET and how would you use it?](#20-what-is-reflection-in-net-and-how-would-you-use-it)
+21. [Can you explain the concept of middleware in ASP.NET Core?](#21-can-you-explain-the-concept-of-middleware-in-aspnet-core)
+22. [Describe the Dependency Injection (DI) pattern and how it's implemented in .NET Core.](#22-describe-the-dependency-injection-di-pattern-and-how-its-implemented-in-net-core)
 ---
 
 ## 1. What is .NET?
@@ -629,3 +632,266 @@ class Program
 }
 ```
 Extension methods are a powerful feature for extending the capabilities of types, especially when direct modifications to the class are not possible or desirable.
+
+## 19. How do you handle exceptions in a method that returns a Task?
+
+In asynchronous programming with C#, when a method returns a `Task` or `Task<T>`, exceptions should be handled within the task to avoid unhandled exceptions that can crash the application. Exceptions thrown in a task are captured and placed on the returned task object. You can handle these exceptions using several approaches:
+
+### Inside the Asynchronous Method
+Use a try-catch block inside the `async` method to catch exceptions directly.
+
+```csharp
+public async Task PerformOperationAsync()
+{
+    try
+    {
+        // Async operation that may throw an exception
+    }
+    catch (Exception ex)
+    {
+        // Handle exception
+    }
+}
+```
+
+### When Awaiting the Task
+Await the task inside a try-catch block to catch exceptions when the task is awaited.
+
+```csharp
+try
+{
+    await PerformOperationAsync();
+}
+catch (Exception ex)
+{
+    // Handle exception
+}
+```
+
+### Using Task.ContinueWith
+Use the `ContinueWith` method to attach a continuation task that can handle exceptions.
+
+```csharp
+PerformOperationAsync().ContinueWith(task =>
+{
+    if (task.Exception != null)
+    {
+        // Handle exception
+        var exception = task.Exception.InnerException;
+    }
+}, TaskContinuationOptions.OnlyOnFaulted);
+```
+
+### Using Task.WhenAny
+Useful for handling exceptions from multiple tasks.
+
+```csharp
+var task = PerformOperationAsync();
+await Task.WhenAny(task); // Wait for task to complete
+
+if (task.IsFaulted)
+{
+    // Handle exception
+    var exception = task.Exception.InnerException;
+}
+```
+
+**Example:**
+
+```csharp
+public async Task<int> DivideAsync(int numerator, int denominator)
+{
+    return await Task.Run(() =>
+    {
+        if (denominator == 0)
+            throw new DivideByZeroException("Denominator cannot be zero.");
+
+        return numerator / denominator;
+    });
+}
+
+public async Task ExecuteAsync()
+{
+    try
+    {
+        int result = await DivideAsync(10, 0);
+        Console.WriteLine($"Result: {result}");
+    }
+    catch (DivideByZeroException ex)
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+    }
+}
+```
+
+Handling exceptions in tasks is crucial for writing robust and error-resistant asynchronous C# applications, ensuring that your application can gracefully recover from errors encountered during asynchronous operations.
+
+---
+
+## 20. What is reflection in .NET and how would you use it?
+
+Reflection in .NET is a powerful feature that allows runtime inspection of assemblies, types, and their members (such as methods, fields, properties, and events). It enables creating instances of types, invoking methods, and accessing fields and properties dynamically, without knowing the types at compile time. Reflection is used for various purposes, including building type browsers, dynamically invoking methods, and reading custom attributes.
+
+**Common use cases:**
+- Dynamically loading and using assemblies.
+- Implementing object browsers or debuggers.
+- Creating instances of types for dependency injection frameworks.
+- Accessing and manipulating metadata for assemblies and types.
+
+**Example:**
+
+```csharp
+using System;
+using System.Reflection;
+
+public class MyClass
+{
+    public void MethodToInvoke()
+    {
+        Console.WriteLine("Method Invoked.");
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Obtaining the Type object for MyClass
+        Type myClassType = typeof(MyClass);
+        
+        // Creating an instance of MyClass
+        object myClassInstance = Activator.CreateInstance(myClassType);
+        
+        // Getting the MethodInfo object for MethodToInvoke
+        MethodInfo methodInfo = myClassType.GetMethod("MethodToInvoke");
+        
+        // Invoking the method on the instance
+        methodInfo.Invoke(myClassInstance, null);
+    }
+}
+```
+
+Using reflection comes with a performance cost, so it should be used judiciously, especially in performance-critical paths of an application.
+
+---
+
+## 21. Can you explain the concept of middleware in ASP.NET Core?
+
+Middleware in ASP.NET Core is software that's assembled into an application pipeline to handle requests and responses. Each component in the middleware pipeline is responsible for invoking the next component in the sequence or short-circuiting the chain if necessary. Middleware components can perform a variety of tasks, such as authentication, routing, session management, and logging.
+
+**Key characteristics:**
+- Enables custom request/response logic.
+- Executed in the order added to the pipeline.
+- Can short-circuit the pipeline and prevent downstream middleware from running.
+
+**Example:**
+
+```csharp
+public class CustomMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public CustomMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        // Do something with the context before the next middleware
+        Console.WriteLine("Before next middleware");
+
+        await _next(context); // Call the next middleware in the pipeline
+
+        // Do something with the context after the next middleware
+        Console.WriteLine("After next middleware");
+    }
+}
+
+// Extension method to register middleware
+public static class CustomMiddlewareExtensions
+{
+    public static IApplicationBuilder UseCustomMiddleware(this IApplicationBuilder builder)
+    {
+        return builder.UseMiddleware<CustomMiddleware>();
+    }
+}
+
+public class Startup
+{
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseCustomMiddleware();
+        // Other middleware registrations
+    }
+}
+```
+
+Middleware components in ASP.NET Core provide a powerful way to compose your application's request-handling pipeline, allowing for modular and reusable components.
+
+---
+
+## 22. Describe the Dependency Injection (DI) pattern and how it's implemented in .NET Core.
+
+**Dependency Injection (DI)** is a design pattern that facilitates loose coupling between software components by removing the direct dependencies among them. Instead of instantiating dependencies directly, components receive their dependencies from an external source (often an inversion of control container). DI makes your code more modular, easier to test, maintain, and extend.
+
+.NET Core has built-in support for dependency injection, which allows services to be registered and resolved through an IoC (Inversion of Control) container. The container manages object creation and injects dependencies where required. This mechanism is central to ASP.NET Core applications.
+
+**Key concepts:**
+- **Service registration:** Services are registered with the DI container, typically in `Startup.ConfigureServices`, specifying their lifetime (singleton, scoped, or transient).
+- **Service resolution:** Services are resolved either through constructor injection, method call injection, or property injection.
+
+**Example:**
+
+```csharp
+public interface IGreetingService
+{
+    string Greet(string name);
+}
+
+public class GreetingService : IGreetingService
+{
+    public string Greet(string name)
+    {
+        return $"Hello, {name}!";
+    }
+}
+
+public class HomeController : Controller
+{
+    private readonly IGreetingService _greetingService;
+
+    public HomeController(IGreetingService greetingService)
+    {
+        _greetingService = greetingService;
+    }
+
+    public IActionResult Index()
+    {
+        var greeting = _greetingService.Greet("World");
+        return Content(greeting);
+    }
+}
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllersWithViews();
+        services.AddTransient<IGreetingService, GreetingService>();
+    }
+
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        // Configure the request pipeline.
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapDefaultControllerRoute();
+        });
+    }
+}
+```
+
+DI in .NET Core supports the development of decoupled and easily testable applications.
