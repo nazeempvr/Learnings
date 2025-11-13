@@ -46,10 +46,13 @@
 40. [Logging, Monitoring & Telemetry in .NET Core](#40-logging-monitoring--telemetry-in-net-core)
 41. [What are Filters in ASP.NET Core?](#41-what-are-filters-in-aspnet-core)
 42. [Authentication vs Authorization in ASP.NET Core](#42-authentication-vs-authorization-in-aspnet-core)
-43. [JWT Authentication: How It Works](#43-jwt-authentication-how-it-works)
-44. [CORS in ASP.NET Core](#44-cors-in-aspnet-core)
-45. [Exception Handling in ASP.NET Core](#45-exception-handling-in-aspnet-core)
-46. [Caching in ASP.NET Core](#46-caching-in-aspnet-core)
+43. [Authentication Strategies in ASP.NET Core](#43-authentication-strategies-in-aspnet-core)
+44. [JWT Authentication: How It Works & Implementation](#44-jwt-authentication-how-it-works--implementation)
+45. [ASP.NET Core Identity](#45-aspnet-core-identity)
+46. [OAuth2 and OpenID Connect](#46-oauth2-and-openid-connect)
+47. [CORS in ASP.NET Core](#47-cors-in-aspnet-core)
+48. [Exception Handling in ASP.NET Core](#48-exception-handling-in-aspnet-core)
+49. [Caching in ASP.NET Core](#49-caching-in-aspnet-core)
 
 ---
 ## 1. What is .NET?
@@ -1758,251 +1761,362 @@ public class AddHeaderResultFilter : IResultFilter
 
 ## 42. Authentication vs Authorization in ASP.NET Core
 
-| Concept         | Meaning                        | Example                          |
-|-----------------|-------------------------------|----------------------------------|
-| Authentication  | Who is the user?              | Login with username/password     |
-| Authorization   | What can the user do?         | Allow only Admins to delete users|
+**Authentication** is the process of verifying who a user is, commonly using login credentials like username and password.  
+**Authorization** determines what the authenticated user can do, such as which resources or actions they are permitted to access or perform.
 
-### Common Authentication Techniques
+| Concept         | Description            | Example                          |
+|-----------------|-----------------------|----------------------------------|
+| **Authentication**  | Verifies identity      | Logging in as 'admin'            |
+| **Authorization**   | Verifies permissions   | Only admins can delete users     |
 
-| Method                  | Description                                | Best For                      |
-|-------------------------|--------------------------------------------|-------------------------------|
-| JWT (JSON Web Token)    | Token-based, stateless authentication      | APIs, microservices, mobile   |
-| ASP.NET Core Identity   | Membership system, roles, claims, cookies  | Web apps with user accounts   |
-| OAuth2 / OpenID Connect | External providers, industry standard      | External login (Google/Azure) |
+- **Authentication** happens first; once a user is identified, **authorization** checks their permissions.
+- Example: You must log in before accessing a profile (authentication). You may access only your own profile, not others’ (authorization).
 
-#### JWT Example
+---
 
-Install NuGet:
-```
+## 43. Authentication Strategies in ASP.NET Core
+
+ASP.NET Core supports several authentication methods:
+
+### 1. JWT (JSON Web Token)
+- Token-based, stateless authentication.
+- The server issues a signed token after successful login, sent with each API request.
+- Best for APIs, microservices, single-page applications, mobile apps.
+
+**Advantages:** Stateless, scalable, easy to use across distributed systems.
+
+### 2. ASP.NET Core Identity
+- Membership system for web apps (users, passwords, roles).
+- Supports features like registration, password hashing, roles/claims, email confirmation, social logins.
+- Stores user info in the backend (like SQL Server).
+
+**Advantages:** Full-featured, customizable, integration with MVC/Razor.
+
+### 3. OAuth2 / OpenID Connect
+- Protocol for delegated authentication and authorization.
+- Used for integrating third-party providers (Google, Facebook, Microsoft, Azure AD).
+- Token-based, supports claims and external identities.
+
+**Advantages:** Secure, industry standard, enables SSO across applications.
+
+#### Comparison Table
+
+| Method                  | Used When                | Token Type         | State     |
+|-------------------------|--------------------------|--------------------|-----------|
+| JWT                     | APIs, microservices      | JWT                | Stateless |
+| ASP.NET Core Identity   | Apps with user accounts  | Cookies/JWT        | Stateful  |
+| OAuth2 / OpenID Connect | Third-party auth, SSO    | Access/ID tokens   | Stateless |
+
+---
+
+## 44. JWT Authentication: How It Works & Implementation
+
+### What is a JWT?
+JWT (JSON Web Token) is a compact, self-contained, digitally signed token used to securely transmit user claims and identity between client and server.
+
+#### Structure
+- **Header:** Specifies type (JWT) and signing algorithm (e.g. HS256).
+- **Payload:** User details (subject, role, expiry).
+- **Signature:** Ensures integrity and authenticity.
+
+**Visual:**
+`xxxxx.yyyyy.zzzzz`
+- xxxxx: Header (Base64)
+- yyyyy: Payload (Base64)
+- zzzzz: Signature (Base64)
+
+#### Typical Flow
+1. **User logs in:** Client sends username and password.
+2. **Server validates:** If valid, issues a JWT with claims and expiry.
+3. **Client stores JWT:** Often in memory/sessionStorage, sent in Authorization header (`Bearer <token>`).
+4. **Requests:** JWT is validated on each protected endpoint by middleware.
+5. **Access granted or denied:** Based on token validity and claims.
+
+#### Implementation Steps
+A. **Install JWT package**
+```sh
 dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
 ```
-Configure JWT:
+
+B. **Configure JWT in Program.cs:**
 ```csharp
+using Microsoft.IdentityModel.Tokens;
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => { /* TokenValidationParameters setup */ });
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "MyApp",
+            ValidAudience = "MyApp",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSuperSecretKey"))
+        };
+    });
 ```
-Secure endpoints:
+
+C. **Generating Token in Controller:**
+```csharp
+[HttpPost("login")]
+public IActionResult Login([FromBody] UserLogin model)
+{
+    // Validate user...
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.Name, model.Username),
+        new Claim(ClaimTypes.Role, "Admin")
+    };
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+    var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    var token = new JwtSecurityToken(
+        issuer: _config["Jwt:Issuer"],
+        audience: _config["Jwt:Issuer"],
+        claims: claims,
+        expires: DateTime.Now.AddMinutes(30),
+        signingCredentials: credentials);
+
+    string jwt = new JwtSecurityTokenHandler().WriteToken(token);
+    return Ok(new { token = jwt });
+}
+```
+
+D. **Protect Endpoints with [Authorize]:**
 ```csharp
 [Authorize]
 [HttpGet("products")]
 public IActionResult GetProducts() => Ok(new[] { "Apple", "Banana", "Orange" });
 ```
+E. **Best Practices**
+- Use HTTPS always.
+- Set short expiration.
+- Implement refresh tokens for renewals.
+- Store secrets and keys securely (Azure Key Vault).
+- Avoid storing tokens in localStorage (use HttpOnly cookies if possible).
+- Rotate keys periodically.
 
-#### ASP.NET Core Identity Example
+---
 
-Setup identity:
+## 45. ASP.NET Core Identity
+
+ASP.NET Core Identity is a comprehensive membership system providing authentication, registration, password management, roles, claims, external logins, and two-factor authentication.
+
+### Features
+- Database-backed users, roles, and claims.
+- Password hashing, email confirmation, lockouts.
+- Supports social logins (Google, Facebook).
+
+**Setup Example:**
 ```csharp
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+});
 ```
-Authorize by role:
+
+**Role-based Authorization:**
 ```csharp
 [Authorize(Roles = "Admin")]
-public IActionResult AdminPage() => View();
+public IActionResult AdminOnlyPage() => View();
 ```
 
-#### OAuth2 / OpenID Connect Example
+### Best Practices
+- Enable HTTPS and secure cookies.
+- Store passwords safely (always hashed/salted by Identity).
+- Use claims and policies for fine-grained access control.
+- Integrate with external providers using OAuth/OpenID.
 
+---
+
+## 46. OAuth2 and OpenID Connect
+
+OAuth2 and OpenID Connect are protocols for secure delegated login and identity across applications.
+
+- **OAuth2:** Authorization (access to resources).
+- **OpenID Connect:** Authentication (who the user is).
+
+### Use Cases
+- Social login (Google, Facebook, Microsoft).
+- Enterprise SSO (Azure AD, Office 365).
+
+**Example: Google Login Setup**
 ```csharp
 builder.Services.AddAuthentication()
     .AddGoogle(options =>
     {
-        options.ClientId = "your-client-id";
-        options.ClientSecret = "your-client-secret";
+        options.ClientId = "<client-id>";
+        options.ClientSecret = "<client-secret>";
     });
 ```
 
-#### Best Practices
+After login, the provider issues a token—your app validates and uses claims for registration/authorization.
 
-- Always use HTTPS
-- Store secrets securely
-- Use short-lived tokens (15–60 min) & refresh tokens
-- Prefer HttpOnly cookies for web apps
-- Use role/claim-based authorization
-- Centralize error logging for authentication failures
-
----
-
-## 43. JWT Authentication: How It Works
-
-**JWT (JSON Web Token)** securely transmits user identity and claims between client and server in a signed token.
-
-**JWT Structure:** `header.payload.signature`, Base64 encoded
-
-| Part       | Description                  |
-|------------|-----------------------------|
-| Header     | Algorithm, token type        |
-| Payload    | Claims (user id, role, exp) |
-| Signature  | Signed to prevent tampering |
-
-### JWT Authentication Flow
-
-1. **User logs in**: submits credentials
-2. **Server validates**: creates JWT token with claims and expiration
-3. **Client stores token**: Authorization header for API calls
-4. **Server verifies token**: middleware checks signature, expiry, claims
-5. **Access control**: `[Authorize]`, roles/claims enforced
-
-**Implementation Example:**
-```csharp
-[HttpPost("login")]
-public IActionResult Login([FromBody] UserLogin model)
-{
-    // ... validate user
-    var claims = new[] { new Claim(ClaimTypes.Name, model.Username) };
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-    var token = new JwtSecurityToken(
-        claims: claims,
-        expires: DateTime.Now.AddHours(1),
-        signingCredentials: creds
-    );
-    return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-}
-```
-Protect API:
-```csharp
-[Authorize]
-public IActionResult GetProtected() => Ok("Success");
-```
-
-**Advantages:**
-- Stateless, scalable, portable for APIs
-
-**Best Practices:**
-- Short-lived/refresh tokens
-- Only over HTTPS
-- Secure storage
-- Rotate keys regularly
+**Best Practices**
+- Always use HTTPS.
+- Store tokens securely.
+- Validate issued tokens and claims.
+- Enforce logout on token revocation.
 
 ---
 
-## 44. CORS in ASP.NET Core
+## 47. CORS in ASP.NET Core
 
-**CORS (Cross-Origin Resource Sharing)** controls which domains/browsers can access your API from different origins.
+**CORS (Cross-Origin Resource Sharing)** controls how and which domains can access your API, especially important for single-page apps, mobile apps, or third-party integrations.
 
-**Typical Scenario:**  
-Front-End SPA at https://web.myapp.com wants data from API at https://api.myapp.com
+### Why Is CORS Needed?
+- Browsers restrict cross-origin requests for security.
+- Backend API and front-end app often run at different domains or ports.
 
-**Enable CORS:**
+**Example: Enable CORS**
 ```csharp
 builder.Services.AddCors(options =>
+{
     options.AddPolicy("AllowMyApp", policy =>
+    {
         policy.WithOrigins("https://web.myapp.com")
               .AllowAnyHeader()
-              .AllowAnyMethod()));
+              .AllowAnyMethod();
+    });
+});
 
-app.UseCors("AllowMyApp"); // before authorization
+app.UseCors("AllowMyApp"); // should be before UseAuthorization
 ```
 
-**CORS Config Options:**
-- `.WithOrigins(...)` : whitelist specific domains
-- `.AllowAnyOrigin()`: allow all (for dev only)
-- `.AllowCredentials()`: send cookies/tokens
-- `.AllowAnyHeader()/.AllowAnyMethod()` : accept all
+**Options:**
+- `.WithOrigins("...")`: Allow specific domains.
+- `.AllowAnyOrigin()`: Allow all.
+- `.AllowCredentials()`: Allow cookies/tokens.
+- `.AllowAnyHeader()`: Permit custom headers.
 
-**Best Practice:**
-- Allow only trusted origins
-- Protect sensitive endpoints
+**Best Practices**
+- Never leave `.AllowAnyOrigin()` enabled in production.
+- Only allow trusted domains.
+- Review CORS configuration for sensitive APIs.
 
 ---
 
-## 45. Exception Handling in ASP.NET Core
+## 48. Exception Handling in ASP.NET Core
 
-**Goal:** Catch errors, log them, return useful responses instead of crashing or exposing internals.
+Exception handling ensures errors are captured, logged, and returned as useful, secure responses.
 
-### Levels of Error Handling
+### Three Main Levels
+1. **Try-Catch in Controllers/Code:** For local/expected errors.
+2. **Exception Filters:** For MVC/Web API layer—implement `IExceptionFilter` or use `[TypeFilter]`.
+3. **Global Middleware:** For all requests—using `app.UseExceptionHandler()` or custom middleware.
 
-| Level     | How                     | Example                       |
-|-----------|-------------------------|-------------------------------|
-| Try-Catch | Specific code blocks    | try { ... } catch (Exception) |
-| Exception Filter | MVC/Web API layer | `IExceptionFilter` or [TypeFilter] |
-| Global Middleware | All requests/global| `UseExceptionHandler()`, custom MW |
-
-**Global Middleware Example:**
+**Global Error Handler Example**
 ```csharp
 app.UseExceptionHandler("/error");
 app.Map("/error", (HttpContext context) =>
 {
     var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-    // Log and return custom error
+    // Log exception, return generic response
     return Results.Problem("An unexpected error occurred.");
 });
 ```
 
-**Custom Exception Handling Middleware:**
+**Custom Exception Middleware**
 ```csharp
 public class ExceptionHandlingMiddleware
 {
-    // ... constructor
-    public async Task InvokeAsync(HttpContext context) {
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly RequestDelegate _next;
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    { _next = next; _logger = logger; }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
         try { await _next(context); }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Unhandled exception");
             context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { Message = "Error occurred" });
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { Message = "An error occurred." });
         }
     }
 }
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 ```
 
-**Exception Filter Example:**
+**Exception Filter Example**
 ```csharp
-public class ApiExceptionFilter : IExceptionFilter {
-    public void OnException(ExceptionContext context) {
-        context.Result = new ObjectResult(new { Error = "Something went wrong." }) { StatusCode = 500 };
+public class ApiExceptionFilter : IExceptionFilter
+{
+    public void OnException(ExceptionContext context)
+    {
+        context.Result = new ObjectResult(new { Error = "Something went wrong." })
+        { StatusCode = 500 };
         context.ExceptionHandled = true;
     }
 }
+// Register filter globally
 builder.Services.AddControllers(options => options.Filters.Add<ApiExceptionFilter>());
 ```
 
-**Best Practices:**
-- Always log exceptions (ILogger, Serilog)
-- Don't leak internal details
-- Centralize error handling
-- Use custom exception types for app errors
+**Best Practices**
+- Always log errors (ILogger, log provider).
+- Hide internal details from clients.
+- Use centralized error handling for most exceptions.
+- Combine monitoring/telemetry for production.
 
 ---
 
-## 46. Caching in ASP.NET Core
+## 49. Caching in ASP.NET Core
 
-**Caching** stores data temporarily so future requests are faster and reduce server/database load.
+Caching improves performance, reduces load on the server, and handles frequently requested data efficiently.
 
-### Types
+### Main Types of Caching
 
-| Type              | Description                          | Example                        |
-|-------------------|--------------------------------------|------------------------------- |
-| Response Caching  | Cache full HTTP response for client  | [ResponseCache(Duration=60)]   |
-| Request/Data Cache| Cache data/query results in memory   | IMemoryCache/IDistributedCache |
-| Distributed Cache | Shared cache across servers          | Redis, SQL Server              |
+| Type                   | What is Cached                | Example/Usage                    |
+|------------------------|-------------------------------|----------------------------------|
+| **Response Caching**   | Full HTTP response            | [ResponseCache(Duration=60)]     |
+| **Request/Data Caching** | Data inside the app instance | IMemoryCache/IDistributedCache   |
+| **Distributed Caching**| Across multiple servers       | Redis, SQL Server                |
+| **ETag/Cache-Control** | Browser/proxy cache           | HTTP headers                     |
 
-### Response Caching
+### 1. Response Caching
+
+- Caches the output of controllers/actions so the same results can be served for repeated GET requests.
 
 **Setup:**
 ```csharp
-builder.Services.AddResponseCaching(); // Register
-app.UseResponseCaching(); // Enable
+builder.Services.AddResponseCaching();
+app.UseResponseCaching();
 ```
-**Attribute:**
+
+**Attribute Usage:**
 ```csharp
 [ResponseCache(Duration = 60)]
-public IActionResult GetProducts() => Ok(new { Products = ... });
+public IActionResult GetProducts()
+{
+    return Ok(new { Time = DateTime.Now, Products = new[] { "TV", "Phone" } });
+}
 ```
 
-### Data Caching (In-Memory)
+### 2. Data Caching
 
-**IMemoryCache Example:**
+- Stores data temporarily in memory or distributed cache.
+- Useful for lookup tables, settings, or frequently requested DB results.
+
+**IMemoryCache Example**
 ```csharp
 public class ProductService
 {
     private readonly IMemoryCache _cache;
     public ProductService(IMemoryCache cache) { _cache = cache; }
-    public async Task<IEnumerable<string>> GetProductsAsync() {
-        if (!_cache.TryGetValue("products", out IEnumerable<string> products)) {
-            // Simulate DB call
+
+    public async Task<IEnumerable<string>> GetProductsAsync()
+    {
+        if (!_cache.TryGetValue("products", out IEnumerable<string> products))
+        {
+            // Simulate database call
             products = new[] { "TV", "Phone", "Laptop" };
             _cache.Set("products", products, TimeSpan.FromMinutes(5));
         }
@@ -2011,27 +2125,29 @@ public class ProductService
 }
 ```
 
-### Distributed Cache (Across Servers)
+### 3. Distributed Caching
 
-**Redis Example:**
+- Shared cache for server farms, uses Redis or SQL backend.
+
+**Redis Example**
 ```csharp
-builder.Services.AddStackExchangeRedisCache(options => {
+builder.Services.AddStackExchangeRedisCache(options =>
+{
     options.Configuration = "localhost:6379";
 });
 ```
-**Best Practices:**
-- Use ResponseCache for common GET endpoints
-- Use IMemoryCache for simple apps, Redis for distributed environments
-- Invalidate cache when data changes
-- Use headers (ETag, Cache-Control) for browser/proxy caching
+Usage: Inject `IDistributedCache` and cache data across servers.
 
-**Summary Table:**
+### 4. HTTP Cache-Control and ETag Headers
 
-| Type              | Where Cached      | Example                       |
-|-------------------|------------------|-------------------------------|
-| Response Caching  | Client/Proxy/API | [ResponseCache(Duration=60)]  |
-| IMemoryCache      | In-memory (app)  | _cache.Set("key", value)      |
-| Distributed Cache | Shared (Redis)   | IDistributedCache             |
-| ETag/Cache-Control| Browser          | HTTP headers                  |
+- Helps browsers/proxies cache responses.
+- Use `[ResponseCache]` or set headers manually for advanced control.
+
+**Best Practices**
+- Use ResponseCache for frequently requested GET endpoints.
+- Use IMemoryCache for per-server data, Redis for distributed scenarios.
+- Invalidate/refresh cache when data changes (not on every request!).
+- Use HTTP headers for browser/proxy caching.
+- Always review caching for sensitive or dynamic data.
 
 ---
