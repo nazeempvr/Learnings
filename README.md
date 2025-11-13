@@ -7,7 +7,7 @@
 4. [Value Types and Reference Types in C#](#5-what-are-value-types-and-reference-types-in-c)
     - [Value Types](#value-types)
     - [Reference Types](#reference-types)
-5. [Garbage Collection in .NET](#6-what-is-garbage-collection-in-net)
+5. [Garbage Collection in .NET](#5-what-is-garbage-collection-in-net)
 
 ---
 
