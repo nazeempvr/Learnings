@@ -39,7 +39,19 @@
 33. [What is Minimal API in ASP.NET Core?](#33-what-is-minimal-api-in-aspnet-core)
 34. [What is async/await?](#34-what-is-asyncawait)
 35. [Why API Versioning? Strategies and Implementation](#35-why-api-versioning-strategies-and-implementation)
+36. [What is Entity Framework Core (EF Core)?](#36-what-is-entity-framework-core-ef-core)
+37. [Common EF Core Performance Issues](#37-common-ef-core-performance-issues)
+38. [Security for ASP.NET Core APIs](#38-security-for-aspnet-core-apis)
+39. [What is Configuration in .NET Core?](#39-what-is-configuration-in-net-core)
+40. [Logging, Monitoring & Telemetry in .NET Core](#40-logging-monitoring--telemetry-in-net-core)
+41. [What are Filters in ASP.NET Core?](#41-what-are-filters-in-aspnet-core)
+42. [Authentication vs Authorization in ASP.NET Core](#42-authentication-vs-authorization-in-aspnet-core)
+43. [JWT Authentication: How It Works](#43-jwt-authentication-how-it-works)
+44. [CORS in ASP.NET Core](#44-cors-in-aspnet-core)
+45. [Exception Handling in ASP.NET Core](#45-exception-handling-in-aspnet-core)
+46. [Caching in ASP.NET Core](#46-caching-in-aspnet-core)
 
+---
 ## 1. What is .NET?
 **Answer:**  
 .NET is a comprehensive development platform used for building a wide variety of applications, including web, mobile, desktop, and gaming. It supports multiple programming languages, such as C#, F#, and Visual Basic.  
@@ -1458,5 +1470,568 @@ services.AddApiVersioning(options =>
 - Keep old versions active during migration.
 - Use ReportApiVersions = true for client info.
 - Document using Swagger/OpenAPI with versioning.
+
+---
+
+## 36. What is Entity Framework Core (EF Core)?
+
+**Entity Framework Core (EF Core)** is a lightweight, cross-platform Object-Relational Mapper (ORM) for .NET.  
+It allows developers to interact with databases using C# objects, supports LINQ queries, change tracking, migrations, and relationships between entities.
+
+**Example: Basic EF Core Usage**
+```csharp
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+
+public class AppDbContext : DbContext
+{
+    public DbSet<Product> Products { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseSqlServer("YourConnectionString");
+}
+
+// Querying data
+using var context = new AppDbContext();
+var products = await context.Products
+                            .Where(p => p.Price > 100)
+                            .ToListAsync();
+```
+
+---
+
+## 37. Common EF Core Performance Issues
+
+**Typical performance optimizations for EF Core:**
+- Use `.AsNoTracking()` for read-only queries.
+- Project only necessary columns using `Select()`.
+- Avoid N+1 problems with `Include()` for related entities.
+- For bulk inserts, disable AutoDetectChanges, use `AddRange()`, or third-party libraries (e.g., EFCore.BulkExtensions).
+- Use compiled queries, pagination, query caching for repetitive operations.
+- On the database side, ensure proper indexing, optimized joins; use raw SQL or stored procedures for intensive queries.
+
+**Example: Optimizing Read Query**
+```csharp
+var lightweightProducts = await context.Products
+    .AsNoTracking()
+    .Select(p => new { p.Id, p.Name })
+    .ToListAsync();
+```
+
+---
+
+## 38. Security for ASP.NET Core APIs
+
+Secure .NET Core Web API endpoints using:
+- Authentication (JWT, OAuth2).
+- Role/policy-based authorization.
+- Enforce HTTPS for transport security.
+- Store secrets/keys in Azure Key Vault.
+- Validate inputs to prevent injection attacks.
+- Restrict cross-origin requests via CORS policies.
+- Use Application Insights for centralized logging.
+- Add rate limiting through API gateways (e.g., Azure API Management).
+
+**Example: Enforcing HTTPS & JWT Auth**
+```csharp
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+```
+
+---
+
+## 39. What is Configuration in .NET Core?
+
+Configuration enables your app to access settings like database connections, API keys, and environment-specific values. .NET Core uses a hierarchical, flexible, environment-aware configuration system.
+
+### Common Sources of Configuration
+
+| Source                       | Example                                   |
+|------------------------------|-------------------------------------------|
+| appsettings.json             | `"ConnectionStrings": { "Default": "..." }` |
+| appsettings.{Environment}.json| `appsettings.Development.json`            |
+| Environment Variables        | `DOTNET_ENVIRONMENT=Development`          |
+| User Secrets (dev only)      | `dotnet user-secrets set "ApiKey" "12345"`|
+| Command-line args            | `dotnet run --ConnectionStrings:Default="..."`|
+| Custom providers             | Azure Key Vault, DB, etc.                 |
+
+### Loading & Accessing Configuration
+
+By default, ASP.NET Core loads config in Program.cs:
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+builder.Configuration
+       .AddJsonFile("appsettings.json")
+       .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+       .AddEnvironmentVariables()
+       .AddCommandLine(args);
+```
+Later sources override earlier ones.
+
+**Direct Access:**
+```csharp
+var connStr = builder.Configuration.GetConnectionString("Default");
+var apiKey = builder.Configuration["ApiKey"];
+```
+
+**Bind to Objects:**
+```csharp
+public class MySettings { public string ApiKey { get; set; } }
+builder.Services.Configure<MySettings>(builder.Configuration.GetSection("MySettings"));
+
+public class MyService
+{
+    private readonly MySettings _settings;
+    public MyService(IOptions<MySettings> options) => _settings = options.Value;
+}
+```
+
+**Environment-Specific Configuration:**  
+Use env variable `DOTNET_ENVIRONMENT=Development` and `appsettings.Development.json`.
+
+**Secret Management:**  
+Use User Secrets for dev, Azure Key Vault for prod.
+
+---
+
+## 40. Logging, Monitoring & Telemetry in .NET Core
+
+### Logging
+Track app behavior, errors, warnings, etc.  
+.NET Core uses `ILogger` abstraction with providers such as Console, Debug, Serilog, NLog.
+
+**Example: Logging in Service**
+```csharp
+public class MyService
+{
+    private readonly ILogger<MyService> _logger;
+    public MyService(ILogger<MyService> logger) { _logger = logger; }
+    public void DoWork()
+    {
+        _logger.LogInformation("Work started");
+        try { /* ... */ }
+        catch (Exception ex) { _logger.LogError(ex, "Error occurred while doing work"); }
+    }
+}
+```
+**Logging Levels:** Trace → Debug → Information → Warning → Error → Critical
+
+**Serilog Example:**
+```csharp
+using Serilog;
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
+```
+
+### Monitoring & Telemetry
+- **Application Insights (Azure):** Monitors requests, dependencies, exceptions.
+- **New Relic, Datadog, Dynatrace:** Full-stack cloud monitoring.
+
+**Example: App Insights**
+```csharp
+builder.Services.AddApplicationInsightsTelemetry();
+```
+
+### Metrics & Health Checks
+- **Prometheus, App Metrics:** Track request rate, CPU, etc.
+- **Health Checks:**
+```csharp
+builder.Services.AddHealthChecks().AddSqlServer(builder.Configuration.GetConnectionString("Default"));
+app.MapHealthChecks("/health");
+```
+Hit `/health` → returns Healthy/Degraded/Unhealthy.
+
+**Best Practices:**
+- Use structured logging (JSON).
+- Centralize logs.  
+- Set appropriate log levels (Debug for dev, Error/Warning for prod).
+- Use telemetry and health checks for production readiness.
+
+**Summary Table**
+
+| Concern      | Tool/Library                                | Purpose                    |
+|--------------|---------------------------------------------|----------------------------|
+| Logging      | Microsoft.Extensions.Logging, Serilog, NLog | Track errors, info, debug  |
+| Telemetry    | App Insights, New Relic, Datadog            | Perf, request tracking     |
+| Metrics      | Prometheus, App Metrics                     | Request rate, latency      |
+| HealthChecks | Microsoft.AspNetCore.Diagnostics.HealthChecks| Verify service health      |
+
+---
+
+## 41. What are Filters in ASP.NET Core?
+
+**Filters** are components that run before or after controller action methods. They add custom logic (auth, validation, logging, error handling) to the action/controller/global pipeline.
+
+### Types of Filters
+
+| Filter Type         | When It Runs                   | Purpose / Example                          |
+|---------------------|-------------------------------|--------------------------------------------|
+| Authorization       | Before action                  | Restrict access (e.g., [Authorize])        |
+| Resource            | Before/after model binding     | Caching, short-circuit requests            |
+| Action              | Before/after action execution  | Logging, modify args/results               |
+| Exception           | On unhandled exception         | Global error handling & custom responses    |
+| Result              | Before/after result execution  | Modify response before sending to client    |
+
+### Examples
+
+**Authorization Filter**
+```csharp
+[Authorize(Roles = "Admin")]
+public class ProductsController : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetProducts() => Ok("All Products");
+}
+```
+
+**Custom Action Filter**
+```csharp
+public class LogActionFilter : IActionFilter
+{
+    private readonly ILogger<LogActionFilter> _logger;
+    public LogActionFilter(ILogger<LogActionFilter> logger) => _logger = logger;
+
+    public void OnActionExecuting(ActionExecutingContext context)
+        => _logger.LogInformation("Action Starting: " + context.ActionDescriptor.DisplayName);
+
+    public void OnActionExecuted(ActionExecutedContext context)
+        => _logger.LogInformation("Action Finished: " + context.ActionDescriptor.DisplayName);
+}
+
+builder.Services.AddControllers(options => { options.Filters.Add<LogActionFilter>(); });
+```
+
+**Custom Exception Filter**
+```csharp
+public class GlobalExceptionFilter : IExceptionFilter
+{
+    private readonly ILogger _logger;
+    public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger) => _logger = logger;
+
+    public void OnException(ExceptionContext context)
+    {
+        _logger.LogError(context.Exception, "Unhandled Exception occurred");
+        context.Result = new ObjectResult("An error occurred") { StatusCode = 500 };
+    }
+}
+builder.Services.AddControllers(options => { options.Filters.Add<GlobalExceptionFilter>(); });
+```
+
+**Result Filter Example**
+```csharp
+public class AddHeaderResultFilter : IResultFilter
+{
+    public void OnResultExecuting(ResultExecutingContext context)
+        => context.HttpContext.Response.Headers.Add("X-App-Version", "1.0");
+    public void OnResultExecuted(ResultExecutedContext context) { }
+}
+```
+
+### Filter Scope / Application Level
+
+- Action level ([ServiceFilter] on method)
+- Controller level ([ServiceFilter] on controller)
+- Global level (add via `options.Filters` in DI)
+
+**Summary Table**
+
+| Filter Type      | Key Uses                                 |
+|------------------|------------------------------------------|
+| Authorization    | Role/permission based access             |
+| Resource         | Caching, pre-action requests             |
+| Action           | Logging, validation, result manipulation |
+| Exception        | Global error handling                    |
+| Result           | Modify outgoing response                 |
+
+**Interview Tip:**  
+"Filters enable cross-cutting concerns such as authentication, logging, exception handling to be applied declaratively in ASP.NET Core controllers/actions/globally."
+
+## 42. Authentication vs Authorization in ASP.NET Core
+
+| Concept         | Meaning                        | Example                          |
+|-----------------|-------------------------------|----------------------------------|
+| Authentication  | Who is the user?              | Login with username/password     |
+| Authorization   | What can the user do?         | Allow only Admins to delete users|
+
+### Common Authentication Techniques
+
+| Method                  | Description                                | Best For                      |
+|-------------------------|--------------------------------------------|-------------------------------|
+| JWT (JSON Web Token)    | Token-based, stateless authentication      | APIs, microservices, mobile   |
+| ASP.NET Core Identity   | Membership system, roles, claims, cookies  | Web apps with user accounts   |
+| OAuth2 / OpenID Connect | External providers, industry standard      | External login (Google/Azure) |
+
+#### JWT Example
+
+Install NuGet:
+```
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+```
+Configure JWT:
+```csharp
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => { /* TokenValidationParameters setup */ });
+```
+Secure endpoints:
+```csharp
+[Authorize]
+[HttpGet("products")]
+public IActionResult GetProducts() => Ok(new[] { "Apple", "Banana", "Orange" });
+```
+
+#### ASP.NET Core Identity Example
+
+Setup identity:
+```csharp
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
+```
+Authorize by role:
+```csharp
+[Authorize(Roles = "Admin")]
+public IActionResult AdminPage() => View();
+```
+
+#### OAuth2 / OpenID Connect Example
+
+```csharp
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = "your-client-id";
+        options.ClientSecret = "your-client-secret";
+    });
+```
+
+#### Best Practices
+
+- Always use HTTPS
+- Store secrets securely
+- Use short-lived tokens (15–60 min) & refresh tokens
+- Prefer HttpOnly cookies for web apps
+- Use role/claim-based authorization
+- Centralize error logging for authentication failures
+
+---
+
+## 43. JWT Authentication: How It Works
+
+**JWT (JSON Web Token)** securely transmits user identity and claims between client and server in a signed token.
+
+**JWT Structure:** `header.payload.signature`, Base64 encoded
+
+| Part       | Description                  |
+|------------|-----------------------------|
+| Header     | Algorithm, token type        |
+| Payload    | Claims (user id, role, exp) |
+| Signature  | Signed to prevent tampering |
+
+### JWT Authentication Flow
+
+1. **User logs in**: submits credentials
+2. **Server validates**: creates JWT token with claims and expiration
+3. **Client stores token**: Authorization header for API calls
+4. **Server verifies token**: middleware checks signature, expiry, claims
+5. **Access control**: `[Authorize]`, roles/claims enforced
+
+**Implementation Example:**
+```csharp
+[HttpPost("login")]
+public IActionResult Login([FromBody] UserLogin model)
+{
+    // ... validate user
+    var claims = new[] { new Claim(ClaimTypes.Name, model.Username) };
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+    var token = new JwtSecurityToken(
+        claims: claims,
+        expires: DateTime.Now.AddHours(1),
+        signingCredentials: creds
+    );
+    return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+}
+```
+Protect API:
+```csharp
+[Authorize]
+public IActionResult GetProtected() => Ok("Success");
+```
+
+**Advantages:**
+- Stateless, scalable, portable for APIs
+
+**Best Practices:**
+- Short-lived/refresh tokens
+- Only over HTTPS
+- Secure storage
+- Rotate keys regularly
+
+---
+
+## 44. CORS in ASP.NET Core
+
+**CORS (Cross-Origin Resource Sharing)** controls which domains/browsers can access your API from different origins.
+
+**Typical Scenario:**  
+Front-End SPA at https://web.myapp.com wants data from API at https://api.myapp.com
+
+**Enable CORS:**
+```csharp
+builder.Services.AddCors(options =>
+    options.AddPolicy("AllowMyApp", policy =>
+        policy.WithOrigins("https://web.myapp.com")
+              .AllowAnyHeader()
+              .AllowAnyMethod()));
+
+app.UseCors("AllowMyApp"); // before authorization
+```
+
+**CORS Config Options:**
+- `.WithOrigins(...)` : whitelist specific domains
+- `.AllowAnyOrigin()`: allow all (for dev only)
+- `.AllowCredentials()`: send cookies/tokens
+- `.AllowAnyHeader()/.AllowAnyMethod()` : accept all
+
+**Best Practice:**
+- Allow only trusted origins
+- Protect sensitive endpoints
+
+---
+
+## 45. Exception Handling in ASP.NET Core
+
+**Goal:** Catch errors, log them, return useful responses instead of crashing or exposing internals.
+
+### Levels of Error Handling
+
+| Level     | How                     | Example                       |
+|-----------|-------------------------|-------------------------------|
+| Try-Catch | Specific code blocks    | try { ... } catch (Exception) |
+| Exception Filter | MVC/Web API layer | `IExceptionFilter` or [TypeFilter] |
+| Global Middleware | All requests/global| `UseExceptionHandler()`, custom MW |
+
+**Global Middleware Example:**
+```csharp
+app.UseExceptionHandler("/error");
+app.Map("/error", (HttpContext context) =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    // Log and return custom error
+    return Results.Problem("An unexpected error occurred.");
+});
+```
+
+**Custom Exception Handling Middleware:**
+```csharp
+public class ExceptionHandlingMiddleware
+{
+    // ... constructor
+    public async Task InvokeAsync(HttpContext context) {
+        try { await _next(context); }
+        catch (Exception ex) {
+            _logger.LogError(ex, "Unhandled exception");
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { Message = "Error occurred" });
+        }
+    }
+}
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+```
+
+**Exception Filter Example:**
+```csharp
+public class ApiExceptionFilter : IExceptionFilter {
+    public void OnException(ExceptionContext context) {
+        context.Result = new ObjectResult(new { Error = "Something went wrong." }) { StatusCode = 500 };
+        context.ExceptionHandled = true;
+    }
+}
+builder.Services.AddControllers(options => options.Filters.Add<ApiExceptionFilter>());
+```
+
+**Best Practices:**
+- Always log exceptions (ILogger, Serilog)
+- Don't leak internal details
+- Centralize error handling
+- Use custom exception types for app errors
+
+---
+
+## 46. Caching in ASP.NET Core
+
+**Caching** stores data temporarily so future requests are faster and reduce server/database load.
+
+### Types
+
+| Type              | Description                          | Example                        |
+|-------------------|--------------------------------------|------------------------------- |
+| Response Caching  | Cache full HTTP response for client  | [ResponseCache(Duration=60)]   |
+| Request/Data Cache| Cache data/query results in memory   | IMemoryCache/IDistributedCache |
+| Distributed Cache | Shared cache across servers          | Redis, SQL Server              |
+
+### Response Caching
+
+**Setup:**
+```csharp
+builder.Services.AddResponseCaching(); // Register
+app.UseResponseCaching(); // Enable
+```
+**Attribute:**
+```csharp
+[ResponseCache(Duration = 60)]
+public IActionResult GetProducts() => Ok(new { Products = ... });
+```
+
+### Data Caching (In-Memory)
+
+**IMemoryCache Example:**
+```csharp
+public class ProductService
+{
+    private readonly IMemoryCache _cache;
+    public ProductService(IMemoryCache cache) { _cache = cache; }
+    public async Task<IEnumerable<string>> GetProductsAsync() {
+        if (!_cache.TryGetValue("products", out IEnumerable<string> products)) {
+            // Simulate DB call
+            products = new[] { "TV", "Phone", "Laptop" };
+            _cache.Set("products", products, TimeSpan.FromMinutes(5));
+        }
+        return products;
+    }
+}
+```
+
+### Distributed Cache (Across Servers)
+
+**Redis Example:**
+```csharp
+builder.Services.AddStackExchangeRedisCache(options => {
+    options.Configuration = "localhost:6379";
+});
+```
+**Best Practices:**
+- Use ResponseCache for common GET endpoints
+- Use IMemoryCache for simple apps, Redis for distributed environments
+- Invalidate cache when data changes
+- Use headers (ETag, Cache-Control) for browser/proxy caching
+
+**Summary Table:**
+
+| Type              | Where Cached      | Example                       |
+|-------------------|------------------|-------------------------------|
+| Response Caching  | Client/Proxy/API | [ResponseCache(Duration=60)]  |
+| IMemoryCache      | In-memory (app)  | _cache.Set("key", value)      |
+| Distributed Cache | Shared (Redis)   | IDistributedCache             |
+| ETag/Cache-Control| Browser          | HTTP headers                  |
 
 ---
