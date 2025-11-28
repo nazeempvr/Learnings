@@ -53,6 +53,7 @@
 47. [CORS in ASP.NET Core](#47-cors-in-aspnet-core)
 48. [Exception Handling in ASP.NET Core](#48-exception-handling-in-aspnet-core)
 49. [Caching in ASP.NET Core](#49-caching-in-aspnet-core)
+50. [How is memory managed in .NET using Garbage Collection (GC)?](#50-how-is-memory-managed-in-net-using-garbage-collection-gc)
 
 ---
 ## 1. What is .NET?
@@ -2150,4 +2151,33 @@ Usage: Inject `IDistributedCache` and cache data across servers.
 - Use HTTP headers for browser/proxy caching.
 - Always review caching for sensitive or dynamic data.
 
+### 50. How is memory managed in .NET using Garbage Collection (GC)?
+
+**Answer:**  
+.NET uses an automatic **Garbage Collector (GC)** to manage memory.
+
+- Objects are stored on the **managed heap**.
+- When an object is no longer referenced, the GC frees the memory.
+- The GC runs automatically, so developers don’t need to manually delete objects.
+
+**Generations in GC:**
+
+- **Gen 0** – Newly created objects  
+- **Gen 1** – Objects that survived one GC cycle  
+- **Gen 2** – Long-living objects  
+
+GC mostly collects **Gen 0**, because most short-lived objects die early.  
+This makes garbage collection fast and efficient.
+
+**Resources GC does NOT automatically clean:**
+- File handles  
+- Database connections  
+- Network streams  
+
+These must be cleaned manually using:
+- **`IDisposable`**  
+- **`using` block** (recommended)
+
+**Summary:**  
+Memory management in .NET is mostly automatic, and GC regularly removes unused objects to prevent memory leaks.
 ---
