@@ -68,6 +68,8 @@
 36. [If client frequently changes requirements during sprint, what will you do?](#36-if-client-frequently-changes-requirements-during-sprint-what-will-you-do)
 37. [Why you are returning back to this company?](#37-why-you-are-returning-back-to-this-company)
 
+[⬆ Back to Table of Contents](#table-of-contents) 
+
 ## Answers
 
 ---[⬆ Back to Table of Contents](#table-of-contents) 
@@ -294,6 +296,8 @@ Promote automation (CI/CD, testing)
 Reduce unnecessary meetings
 
 👉 Productive teams are created by clarity, stability, and trust — not pressure.
+
+[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 7. How do you decide between Monolith and Microservices?
 
