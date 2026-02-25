@@ -1,3 +1,4 @@
+## Table of Contents
 # Technical Lead – Interview Q&A
 
 ## Questions
@@ -1444,3 +1445,5 @@ After moving, I gained good experience, but working on the same project for thre
 When I worked here earlier, I had more dynamic learning opportunities.
 
 Now, with additional leadership and architectural experience, I feel I can bring stronger value back.
+
+[⬆ Back to Table of Contents](#table-of-contents) 
