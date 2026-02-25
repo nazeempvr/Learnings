@@ -14,7 +14,13 @@
 
 6️⃣ [How do you ensure team productivity?](#6️⃣-how-do-you-ensure-team-productivity)
 
----
+7. [How do you decide between Monolith and Microservices?](#7-how-do-you-decide-between-monolith-and-microservices)
+8. [Explain a complex architecture you designed](#8-explain-a-complex-architecture-you-designed)
+9. [How do you ensure scalability?](#9-how-do-you-ensure-scalability)
+10. [How do you handle performance bottlenecks?](#10-how-do-you-handle-performance-bottlenecks)
+11. [How do you design high availability systems?](#11-how-do-you-design-high-availability-systems)
+12. [How do you secure a .NET application?](#12-how-do-you-secure-a-net-application)
+
 
 ---
 
@@ -244,3 +250,199 @@ Promote automation (CI/CD, testing)
 Reduce unnecessary meetings
 
 👉 Productive teams are created by clarity, stability, and trust — not pressure.
+
+## 7. How do you decide between Monolith and Microservices?
+
+Answer:
+
+I don’t choose microservices by default. I decide based on business complexity, team size, and scalability needs.
+
+I prefer Monolith when:
+
+- Product is in early stage
+- Small team (less than 6–8 developers)
+- Domain is not complex
+- Deployment simplicity is important
+- Tight coupling between modules
+
+I prefer Microservices when:
+
+- Large domain with clear bounded contexts
+- Multiple teams working independently
+- Need independent scaling
+- High availability is critical
+- Frequent deployments required
+
+### Trade-off Awareness
+
+| Monolith | Microservices |
+|----------|--------------|
+| Simple deployment | Complex DevOps |
+| Easier debugging | Distributed tracing required |
+| Faster initial development | Higher infra cost |
+| Tight coupling risk | Network latency |
+
+👉 My approach:  
+Start with modular monolith. Move to microservices only when business complexity demands it.
+
+---
+
+## 8. Explain a complex architecture you designed
+
+You can align this with your IDP project experience.
+
+Answer (Sample Structured Response):
+
+In one of my projects, we designed a scalable inventory management system with:
+
+- ASP.NET Core Web API
+- Azure Cosmos DB
+- Azure Functions for background processing
+- Azure App Configuration & Key Vault
+- CI/CD through Azure DevOps
+
+### Architecture Highlights
+
+- Clean Architecture (Domain, Application, Infrastructure)
+- Repository pattern with dependency injection
+- Background processing using Azure Functions for async tasks
+- Centralized logging & monitoring
+- Configuration externalized in Azure App Configuration
+
+### Why this design?
+
+- Separation of concerns
+- Easy testing (xUnit + Moq)
+- Scalable storage (Cosmos DB)
+- Secure secrets management
+
+👉 The goal was scalability, maintainability, and cloud-native design.
+
+---
+
+## 9. How do you ensure scalability?
+
+I consider both horizontal and vertical scaling.
+
+### 1️⃣ Application Level
+
+- Stateless APIs
+- Avoid in-memory session
+- Async programming
+- Caching (Redis)
+
+### 2️⃣ Database Level
+
+- Proper indexing
+- Query optimization
+- Read replicas if needed
+- Partitioning (Cosmos DB)
+
+### 3️⃣ Infrastructure Level
+
+- Auto-scaling in Azure App Services
+- Load balancing
+- Containerization if required
+
+### 4️⃣ Performance Best Practices
+
+- Use pagination
+- Avoid N+1 queries
+- Use projections instead of full entity load
+
+👉 Scalability is planned at design time — not added later.
+
+---
+
+## 10. How do you handle performance bottlenecks?
+
+My approach:
+
+### Step 1: Identify
+
+- Application Insights / Datadog / New Relic
+- Check CPU, memory, response time
+- Slow query logs
+
+### Step 2: Analyze
+
+- Is it DB issue?
+- Is it memory pressure?
+- Is it thread blocking?
+- Is it network latency?
+
+### Step 3: Optimize
+
+- Add caching
+- Fix inefficient LINQ queries
+- Use async properly
+- Reduce object allocations
+- Tune GC if necessary
+
+### Step 4: Validate
+
+- Load testing
+- Compare before/after metrics
+
+👉 I rely on data, not assumptions.
+
+---
+
+## 11. How do you design high availability systems?
+
+High availability = system continues even if one component fails.
+
+My strategy:
+
+### 1️⃣ Multiple Instances
+Deploy application in multiple instances behind load balancer.
+
+### 2️⃣ Health Checks
+Enable health endpoints for auto-restart.
+
+### 3️⃣ Database Resilience
+- Geo-replication
+- Failover groups
+
+### 4️⃣ Retry & Circuit Breaker
+Use Polly for transient failures.
+
+### 5️⃣ Graceful Degradation
+If one service fails, system should partially work.
+
+### 6️⃣ Monitoring & Alerts
+Proactive monitoring reduces downtime.
+
+👉 HA is achieved through redundancy + monitoring + failover.
+
+---
+
+## 12. How do you secure a .NET application?
+
+Security is multi-layered.
+
+### 1️⃣ Authentication & Authorization
+- JWT / OAuth2
+- Role-based & policy-based authorization
+
+### 2️⃣ Data Protection
+- HTTPS only
+- Encrypt sensitive data
+- Use Azure Key Vault for secrets
+
+### 3️⃣ Secure Coding
+- Prevent SQL Injection (use parameterized queries / EF)
+- Validate input
+- Avoid exposing stack traces
+
+### 4️⃣ API Security
+- Rate limiting
+- CORS policy configuration
+- API Gateway if microservices
+
+### 5️⃣ Infrastructure Security
+- Network security groups
+- Firewall rules
+- Private endpoints
+
+👉 Security is not a feature. It’s a design principle.
