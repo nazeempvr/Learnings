@@ -1419,7 +1419,7 @@ At the same time, I want to stay hands-on technically because I believe strong l
 
 👉 My goal is continuous growth while adding increasing value to the organization.
 
-36. If client frequently changes requirements during sprint, what will you do?
+## 36. If client frequently changes requirements during sprint, what will you do?
 
 Requirement changes are common, but during an active sprint, we should protect sprint stability.
 
