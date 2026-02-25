@@ -70,7 +70,7 @@
 
 ## Answers
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 1️⃣ How do you handle underperforming team members?
 
@@ -108,7 +108,7 @@ If there’s still no improvement after support and clarity, then I escalate app
 
 👉 My approach is: Support first, correct second, escalate last.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 2️⃣ How do you mentor junior developers?
 
@@ -140,7 +140,7 @@ I focus on making them independent problem solvers, not dependent coders.
 
 👉 My goal is to make juniors capable of handling modules independently within 6–12 months.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 3️⃣ How do you conduct code reviews?
 
@@ -187,7 +187,7 @@ I ask developer to explain logic before approval
 👉 Code review is not about finding mistakes.  
 It’s about maintaining standards and preventing future production issues.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 4️⃣ How do you distribute tasks in a sprint?
 
@@ -229,7 +229,7 @@ Rebalance tasks if needed
 
 👉 My focus is balanced workload + predictable delivery.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 5️⃣ How do you handle conflicts within the team?
 
@@ -265,7 +265,7 @@ As a lead, I stay neutral and solution-oriented.
 
 👉 My priority is protecting team harmony and delivery momentum.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 6️⃣ How do you ensure team productivity?
 
@@ -329,7 +329,7 @@ I prefer Microservices when:
 👉 My approach:  
 Start with modular monolith. Move to microservices only when business complexity demands it.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 8. Explain a complex architecture you designed
 
@@ -362,7 +362,7 @@ In one of my projects, we designed a scalable inventory management system with:
 
 👉 The goal was scalability, maintainability, and cloud-native design.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 9. How do you ensure scalability?
 
@@ -396,7 +396,7 @@ I consider both horizontal and vertical scaling.
 
 👉 Scalability is planned at design time — not added later.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 10. How do you handle performance bottlenecks?
 
@@ -430,7 +430,7 @@ My approach:
 
 👉 I rely on data, not assumptions.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 11. How do you design high availability systems?
 
@@ -459,7 +459,7 @@ Proactive monitoring reduces downtime.
 
 👉 HA is achieved through redundancy + monitoring + failover.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 12. How do you secure a .NET application?
 
@@ -489,7 +489,7 @@ Security is multi-layered.
 - Firewall rules
 - Private endpoints
 
-👉 Security is not a feature. It’s a design principle.
+👉 Security is not a feature. It’s a design principle.[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 13. Tell me about a production incident you handled
 
@@ -535,7 +535,7 @@ Load testing before release
 
 👉 I focus on stabilizing first, then analyzing root cause, then preventing recurrence.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 14. How do you debug performance issues in production?
 
@@ -591,7 +591,7 @@ Monitor closely
 
 👉 I never guess. I rely on metrics and evidence.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 15. How do you reduce downtime?
 
@@ -626,7 +626,7 @@ Clear escalation matrix
 👉 My goal is:
 Detect early → Recover fast → Prevent repeat.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 16. How do you implement monitoring & alerts?
 
@@ -676,7 +676,7 @@ We integrate alerts with Slack/Email/Incident tools.
 
 👉 Monitoring should be proactive, not reactive.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 17. What is your RCA (Root Cause Analysis) process?
 
@@ -732,7 +732,7 @@ Add test coverage
 
 Improve deployment validation
 
-👉 RCA is not about blaming. It’s about strengthening the system.
+👉 RCA is not about blaming. It’s about strengthening the system.[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 18. How do you handle missed deadlines?
 
@@ -773,7 +773,7 @@ Improve estimation or requirement clarity
 
 👉 My approach: Early detection + transparent communication + corrective action.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 19. How do you manage changing requirements?
 
@@ -813,7 +813,7 @@ Move to next sprint backlog
 
 👉 Change is welcome, but uncontrolled change affects predictability.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 20. How do you estimate tasks?
 
@@ -852,7 +852,7 @@ I involve team discussion (planning poker style)
 
 👉 Estimation is about reducing uncertainty, not predicting exact hours.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 21. How do you ensure sprint commitments are met?
 
@@ -890,7 +890,7 @@ Improve planning accuracy
 
 👉 Sprint success depends on clarity + focus + quick blocker resolution.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 22. How do you handle scope creep?
 
@@ -916,7 +916,7 @@ No silent addition of tasks
 
 All changes go through backlog refinement
 
-👉 Scope can change — but timeline and capacity must also change.
+👉 Scope can change — but timeline and capacity must also change.[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 23. How do you communicate technical issues to non-technical stakeholders?
 
@@ -956,7 +956,7 @@ When it will be resolved
 
 👉 My goal is clarity without overwhelming them technically.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 24. How do you prioritize tasks when business pressure is high?
 
@@ -990,7 +990,7 @@ Low Value → Defer
 
 👉 My responsibility is balancing business urgency with technical sustainability.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 25. Have you disagreed with product owners? How did you handle it?
 
@@ -1027,7 +1027,7 @@ I say:
 
 👉 My goal is collaboration, not confrontation.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 26. Explain SOLID with real examples
 
@@ -1116,7 +1116,7 @@ This allows easy testing and loose coupling.
 
 👉 SOLID reduces technical debt and improves long-term maintainability.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 27. How do you optimize EF Core performance?
 
@@ -1154,7 +1154,7 @@ Use Redis for frequently accessed data
 
 👉 EF Core performance is mostly about query design, not EF itself.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 28. How do you handle concurrency in .NET?
 
@@ -1186,7 +1186,7 @@ Idempotent APIs to avoid duplicate processing
 
 👉 I prefer optimistic concurrency in web applications because it scales better.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 29. What is your approach to system design?
 
@@ -1248,7 +1248,7 @@ Alerts
 
 👉 I design systems to be maintainable first, scalable second, complex last.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 30. How do you design logging & observability?
 
@@ -1292,7 +1292,7 @@ Define SLOs
 
 Monitor business KPIs  
 
-👉 Observability is not just logs — it’s the ability to understand system behavior in real time.
+👉 Observability is not just logs — it’s the ability to understand system behavior in real time.[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 31. Why should we hire you as a Technical Lead?
 
@@ -1316,7 +1316,7 @@ In my current role, I’ve handled architecture decisions, production incidents,
 
 👉 I act as a bridge between business and technology, ensuring both move in alignment.
 
----
+---[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 32. What is your leadership style?
 
@@ -1337,7 +1337,7 @@ I don’t micromanage. Instead, I create clarity and remove blockers so the team
 I also believe in leading by example — whether it’s writing clean code, handling incidents calmly, or communicating professionally with stakeholders.
 
 👉 My goal is to build a self-sustaining, high-performing team.
-
+[⬆ Back to Table of Contents](#table-of-contents) 
 ---
 
 ## 33. How do you handle failure?
@@ -1369,7 +1369,7 @@ Improve review checklist.
 I take responsibility for team outcomes because as a lead, accountability starts with me.
 
 👉 Failure improves systems when handled correctly.
-
+[⬆ Back to Table of Contents](#table-of-contents) 
 ---
 
 ## 34. What motivates you?
@@ -1391,7 +1391,7 @@ Improving system performance and reliability
 I also get motivated when the team successfully delivers challenging releases.
 
 👉 Creating long-term technical value motivates me more than short-term coding tasks.
-
+[⬆ Back to Table of Contents](#table-of-contents) 
 ---
 
 ## 35. Where do you see yourself in 3–5 years?
@@ -1419,6 +1419,7 @@ Drive technical strategy aligned with business goals
 At the same time, I want to stay hands-on technically because I believe strong leaders must understand the ground reality of engineering.
 
 👉 My goal is continuous growth while adding increasing value to the organization.
+[⬆ Back to Table of Contents](#table-of-contents) 
 
 ## 36. If client frequently changes requirements during sprint, what will you do?
 
@@ -1436,6 +1437,7 @@ Stop the current sprint and replan (only if absolutely necessary).
 
 My goal is to maintain delivery commitment while still being flexible to business needs.
 
+[⬆ Back to Table of Contents](#table-of-contents) 
 ---
 
 ## 37. Why you are returning back to this company?
