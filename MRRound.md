@@ -67,7 +67,9 @@
 
 36. [If client frequently changes requirements during sprint, what will you do?](#36-if-client-frequently-changes-requirements-during-sprint-what-will-you-do)
 37. [Why you are returning back to this company?](#37-why-you-are-returning-back-to-this-company)
+38. [What is meant by success in the project as per you?](#38-what-is-meant-by-success-in-the-project-as-per-you)
 
+    
 [⬆ Back to Table of Contents](#table-of-contents) 
 
 ## Answers
@@ -1453,3 +1455,11 @@ When I worked here earlier, I had more dynamic learning opportunities.
 Now, with additional leadership and architectural experience, I feel I can bring stronger value back.
 
 [⬆ Back to Table of Contents](#table-of-contents) 
+
+
+## 38. What is meant by success in the project as per you?
+For me, project success means delivering the right solution that meets business requirements on time, with high quality, minimal production issues, and long-term maintainability — while keeping stakeholders satisfied and the team motivated.
+
+---
+[⬆ Back to Table of Contents](#table-of-contents)
+---
