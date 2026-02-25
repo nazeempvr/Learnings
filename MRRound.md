@@ -62,6 +62,11 @@
 34. [What motivates you?](#34-what-motivates-you)
 35. [Where do you see yourself in 3–5 years?](#35-where-do-you-see-yourself-in-35-years)
 
+**Common**
+
+36. [If client frequently changes requirements during sprint, what will you do?](#36-if-client-frequently-changes-requirements-during-sprint-what-will-you-do)
+37. [Why you are returning back to this company?](#37-why-you-are-returning-back-to-this-company)
+
 ## Answers
 
 ---
@@ -1413,3 +1418,29 @@ Drive technical strategy aligned with business goals
 At the same time, I want to stay hands-on technically because I believe strong leaders must understand the ground reality of engineering.
 
 👉 My goal is continuous growth while adding increasing value to the organization.
+
+36. If client frequently changes requirements during sprint, what will you do?
+
+Requirement changes are common, but during an active sprint, we should protect sprint stability.
+
+First, I would evaluate the impact of the change — effort, timeline, dependencies, and risk.
+
+If it’s not critical, I would explain to the client that we can take it into the next sprint through proper backlog refinement.
+
+If it’s urgent and high priority, I would discuss with the Product Owner and team to see whether we need to:
+
+Reprioritize sprint items, or  
+
+Stop the current sprint and replan (only if absolutely necessary).
+
+My goal is to maintain delivery commitment while still being flexible to business needs.
+
+---
+
+## 37. Why you are returning back to this company?
+
+After moving, I gained good experience, but working on the same project for three years made me realize I prefer an environment with varied challenges and broader technical exposure.
+
+When I worked here earlier, I had more dynamic learning opportunities.
+
+Now, with additional leadership and architectural experience, I feel I can bring stronger value back.
